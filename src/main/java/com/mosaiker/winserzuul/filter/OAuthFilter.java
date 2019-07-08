@@ -72,8 +72,12 @@ public class OAuthFilter extends ZuulFilter {
         if (pathUrl.startsWith("/user/user/updateInfo")) {
             param.put("roles", roles);  //roles为空，表示通配，所有身份都可以（包括被禁用）
         } else if (pathUrl.startsWith("/hean/hean")) {
-            roles.add("USER");
-            roles.add("SUPERUSER");
+            if (pathUrl.equals("/hean/hean/all") || pathUrl.equals("/hean/hean/delete")) {
+                roles.add("ADMIN");
+            } else {
+                roles.add("USER");
+                roles.add("SUPERUSER");
+            }
             param.put("roles", roles);
         } else if (pathUrl.startsWith("/admin/admin")) {
             roles.add("ADMIN");
