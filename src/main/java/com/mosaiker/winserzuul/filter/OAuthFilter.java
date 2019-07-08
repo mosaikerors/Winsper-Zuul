@@ -2,14 +2,18 @@ package com.mosaiker.winserzuul.filter;
 
 import com.alibaba.fastjson.JSONObject;
 import com.mosaiker.winserzuul.service.OAuthService;
+import com.mosaiker.winserzuul.utils.Util;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class OAuthFilter extends ZuulFilter {
@@ -28,6 +32,12 @@ public class OAuthFilter extends ZuulFilter {
     }
 
     /*
+    * /user/login,/user
+    * */
+    @Value("${noAuth}")
+    String noAuth;
+
+    /*
     * 判断是否需要认证
     * 默认需要认证，把不需要认证的特殊情况写出来
     * */
@@ -38,14 +48,20 @@ public class OAuthFilter extends ZuulFilter {
         String requestUrl = request.getRequestURL().toString();
         String pathUrl = requestUrl.substring(requestUrl.indexOf("7120")+4);
         ctx.set("pathUrl", pathUrl);
-        if (pathUrl.startsWith("/user")) {
-            String secondPath = pathUrl.substring(10);
-            if (secondPath.startsWith("/sendCode")||secondPath.startsWith("/signup")||secondPath.startsWith("/login")) {
+        List<String> noAuthPaths = Arrays.asList(noAuth.split(","));
+        for (String noAuthPath : noAuthPaths) {
+            if (pathUrl.startsWith(noAuthPath)) {
                 return false;
             }
         }
         return true;
     }
+
+    /*
+     * e.g. /user/updateInfo:USER,SUPERUSER;/user/login:;/admin:ADMIN;
+     * */
+    @Value("${pathRole}")
+    String pathRoleString;
 
     @Override
     public Object run() {
@@ -69,22 +85,16 @@ public class OAuthFilter extends ZuulFilter {
         param.put("uId", Long.parseLong(uId));
         //  对各路径的Auth身份规则进行定义
         List<String> roles = new ArrayList<>();
-        if (pathUrl.startsWith("/user/user/updateInfo")) {
-            param.put("roles", roles);  //roles为空，表示通配，所有身份都可以（包括被禁用）
-        } else if (pathUrl.startsWith("/hean/hean")) {
-            if (pathUrl.equals("/hean/hean/all") || pathUrl.equals("/hean/hean/delete")) {
-                roles.add("ADMIN");
-            } else {
-                roles.add("USER");
-                roles.add("SUPERUSER");
+        Map<String, List<String>> pathRoleMap = Util.parsePathAndRole(pathRoleString);
+        //roles为空，表示通配，所有身份都可以（包括被禁用）
+        for (String path : pathRoleMap.keySet()) {
+            if (pathUrl.startsWith(path)) {
+                roles = pathRoleMap.get(path);
+                break;
             }
-            param.put("roles", roles);
-        } else if (pathUrl.startsWith("/admin/admin")) {
-            roles.add("ADMIN");
-            param.put("roles", roles);
-        } else {
-            //未知网址。。。
         }
+        param.put("roles", roles);
+
         //  认证身份
         JSONObject oAuthResult = oAuthService.authenticate(param);
         if (oAuthResult.getString("message").equals("ok")) {
