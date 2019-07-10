@@ -41,6 +41,33 @@ steps:
     - docker rm -f winsper-winsper-zuul-c
     - docker run -d --name winsper-winsper-zuul-c -p 7120:7120 winsper-winsper-zuul
 
+- name: upload_czn
+  image: appleboy/drone-scp
+  settings:
+    host: 47.102.205.224
+    username: root
+    password:
+      from_secret: czn_password
+    rm: true
+    target: /Winsper/hean-service
+    source:
+      - target/hean-service-0.0.1-SNAPSHOT.jar
+      - Dockerfile
+
+- name: deploy_czn
+  image: appleboy/drone-ssh
+  settings:
+    host: 47.102.205.224
+    username: root
+    password:
+      from_secret: czn_password
+    script:
+      - cd /Winsper/hean-service/target
+      - cp ../Dockerfile .
+      - docker build -t winsper-winsper-zuul .
+      - docker rm -f winsper-winsper-zuul-c
+      - docker run -d --name winsper-winsper-zuul-c --expose=7120 -p 7120:7120 -e "EUREKA_INSTANCE_IP-ADDRESS=47.102.205.224" -e "SERVER_PORT=7120" winsper-winsper-zuul
+
 volumes:
 - name: dependency
   host:
