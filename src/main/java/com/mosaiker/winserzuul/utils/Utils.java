@@ -2,10 +2,7 @@ package com.mosaiker.winserzuul.utils;
 
 import java.util.*;
 
-public class Util {
-    /*
-    * e.g. /user/updateInfo:USER,SUPERUSER;/user/login:;/admin:ADMIN;
-    * */
+public class Utils {
     public static Map<String, List<String>> parsePathAndRole(String pathRoleString) {
         Map<String, List<String>> pathRoleMap = new HashMap<>();
         List<String> roles;
@@ -22,5 +19,13 @@ public class Util {
             beginIndex = endIndex + 1;
         }
         return pathRoleMap;
+    }
+
+    public static String getFullSecret(String password, int status, String commonSecret) {
+        if (status > 0) {
+            return password + commonSecret;
+        } else {
+            return commonSecret + password;
+        }
     }
 }

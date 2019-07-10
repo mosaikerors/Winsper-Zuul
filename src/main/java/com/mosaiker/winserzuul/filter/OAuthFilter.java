@@ -2,14 +2,19 @@ package com.mosaiker.winserzuul.filter;
 
 import com.alibaba.fastjson.JSONObject;
 import com.mosaiker.winserzuul.service.OAuthService;
-import com.mosaiker.winserzuul.utils.Util;
+import com.mosaiker.winserzuul.utils.Utils;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
+import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +51,7 @@ public class OAuthFilter extends ZuulFilter {
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
         String requestUrl = request.getRequestURL().toString();
-        String pathUrl = requestUrl.substring(requestUrl.indexOf("7120")+4);
+        String pathUrl = requestUrl.substring(requestUrl.indexOf(port)+port.length());
         ctx.set("pathUrl", pathUrl);
         System.out.println("pathUrl:  " + pathUrl);
         List<String> noAuthPaths = Arrays.asList(noAuth.split(","));
@@ -67,14 +72,18 @@ public class OAuthFilter extends ZuulFilter {
     @Value("${pathRole}")
     String pathRoleString;
 
+    @Value("${server.port}")
+    String port;
+
     @Override
     public Object run() {
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
         String token = request.getHeader("Authorization");
-        String  uId = request.getHeader("uId");
+        String uId = request.getHeader("uId");
         String pathUrl = ctx.get("pathUrl").toString();
         JSONObject result = new JSONObject();
+        //  验证header信息是否不全
         if (token == null || uId == null) {
             ctx.setSendZuulResponse(false);//不需要进行路由，也就是不会调用api服务提供者
             ctx.setResponseStatusCode(401);
@@ -84,12 +93,13 @@ public class OAuthFilter extends ZuulFilter {
             ctx.setResponseBody(result.toJSONString());// 返回错误内容
             return null;
         }
+        ctx.set("uId", uId);
         JSONObject param = new JSONObject();
         param.put("token", token);
         param.put("uId", Long.parseLong(uId));
         //  对各路径的Auth身份规则进行定义
         List<String> roles = new ArrayList<>();
-        Map<String, List<String>> pathRoleMap = Util.parsePathAndRole(pathRoleString);
+        Map<String, List<String>> pathRoleMap = Utils.parsePathAndRole(pathRoleString);
         //roles为空，表示通配，所有身份都可以（包括被禁用）
         for (String path : pathRoleMap.keySet()) {
             if (pathUrl.startsWith(path)) {

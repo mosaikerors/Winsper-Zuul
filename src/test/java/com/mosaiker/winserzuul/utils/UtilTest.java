@@ -12,7 +12,7 @@ public class UtilTest {
     @Test
     public void parsePathAndRole() {
         String pathRoleString = "user/updateInfo:USER,SUPERUSER;user/login:;admin:ADMIN;";
-        Map<String, List<String>> pathRoleMap = Util.parsePathAndRole(pathRoleString);
+        Map<String, List<String>> pathRoleMap = Utils.parsePathAndRole(pathRoleString);
         System.out.println(pathRoleMap);
 
     }
