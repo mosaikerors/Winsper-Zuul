@@ -53,16 +53,13 @@ public class OAuthFilter extends ZuulFilter {
         String requestUrl = request.getRequestURL().toString();
         String pathUrl = requestUrl.substring(requestUrl.indexOf(port)+port.length());
         ctx.set("pathUrl", pathUrl);
-        System.out.println("pathUrl:  " + pathUrl);
+        ctx.set("isOK", true);
         List<String> noAuthPaths = Arrays.asList(noAuth.split(","));
-        System.out.println("noAuthPaths:  " + noAuthPaths);
         for (String noAuthPath : noAuthPaths) {
-            System.out.println("noAuthPath:  " + noAuthPath);
             if (pathUrl.startsWith(noAuthPath)) {
                 return false;
             }
         }
-        System.out.println("true");
         return true;
     }
 

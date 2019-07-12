@@ -49,9 +49,9 @@ steps:
     password:
       from_secret: czn_password
     rm: true
-    target: /Winsper/hean-service
+    target: /Winsper/winsper-zuul
     source:
-      - target/hean-service-0.0.1-SNAPSHOT.jar
+      - target/winsper-zuul-0.0.1-SNAPSHOT.jar
       - Dockerfile
 
 - name: deploy_czn
@@ -62,7 +62,7 @@ steps:
     password:
       from_secret: czn_password
     script:
-      - cd /Winsper/hean-service/target
+      - cd /Winsper/winsper-zuul/target
       - cp ../Dockerfile .
       - docker build -t winsper-winsper-zuul .
       - docker rm -f winsper-winsper-zuul-c

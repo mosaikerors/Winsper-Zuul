@@ -65,7 +65,6 @@ public class TokenServiceImpl implements TokenService {
     public boolean verifyTokenRoleHave(String token, Long uId, List<String> roleArray) {
         // 解析 Token
         JSONObject userInfo = parseToken(token, uId);
-        System.out.println(userInfo);
         if (!userInfo.getString("message").equals("ok")) {
             //token已过期
             System.out.println("token expire");
