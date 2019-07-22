@@ -51,11 +51,15 @@ public class OAuthFilter extends ZuulFilter {
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
         String requestUrl = request.getRequestURL().toString();
-        String pathUrl = requestUrl.substring(requestUrl.indexOf(port)+port.length());
+        String pathUrl = requestUrl.substring(requestUrl.indexOf(port) + port.length());
+        System.out.println("requestUrl: " + requestUrl);
+        System.out.println("pathUrl: " + pathUrl);
+        System.out.println("port: " + port);
         ctx.set("pathUrl", pathUrl);
         ctx.set("isOK", true);
         List<String> noAuthPaths = Arrays.asList(noAuth.split(","));
         for (String noAuthPath : noAuthPaths) {
+            System.out.println("noAuthPath: " + noAuthPath);
             if (pathUrl.startsWith(noAuthPath)) {
                 return false;
             }
@@ -69,8 +73,7 @@ public class OAuthFilter extends ZuulFilter {
     @Value("${pathRole}")
     String pathRoleString;
 
-    @Value("${server.port}")
-    String port;
+    String port="30525";
 
     @Override
     public Object run() {
