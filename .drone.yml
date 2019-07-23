@@ -17,7 +17,7 @@ steps:
   - name: upload
     image: appleboy/drone-scp
     settings:
-      host: 202.120.40.8
+      host: 10.0.0.98
       username: root
       key:
         from_secret: private_key
@@ -30,7 +30,7 @@ steps:
   - name: deploy
     image: appleboy/drone-ssh
     settings:
-      host: 202.120.40.8
+      host: 10.0.0.98
       username: root
       key:
         from_secret: private_key
