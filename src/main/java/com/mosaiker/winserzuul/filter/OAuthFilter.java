@@ -89,7 +89,7 @@ public class OAuthFilter extends ZuulFilter {
             ctx.setResponseStatusCode(401);
             ctx.set("isOK",false);//可以把一些值放到ctx中，便于后面的filter获取使用
             //返回内容给客户端
-            result.put("message", "auth fail: no token or no uId");
+            result.put("rescode", 2);
             ctx.setResponseBody(result.toJSONString());// 返回错误内容
             return null;
         }
@@ -111,7 +111,7 @@ public class OAuthFilter extends ZuulFilter {
 
         //  认证身份
         JSONObject oAuthResult = oAuthService.authenticate(param);
-        if (oAuthResult.getString("message").equals("ok")) {
+        if (oAuthResult.getInteger("rescode").equals(0)) {
             //  认证成功
             ctx.setSendZuulResponse(true);//会进行路由，也就是会调用api服务提供者
             ctx.setResponseStatusCode(200);

@@ -25,10 +25,10 @@ public class OAuthServiceImpl implements OAuthService {
         String token = request.getString("token");
         List<String> roleArray = request.getJSONArray("roles").toJavaList(String.class);
         if (token==null||!tokenService.verifyTokenRoleHave(token, request.getLong("uId"), roleArray)) {
-            result.put("message", "sorry, you don't have right to do so");  //抱歉，你没有这个权限
+            result.put("rescode", 2);  //抱歉，你没有这个权限
             return result;
         }
-        result.put("message", "ok");
+        result.put("rescode", 0);
         return result;
     }
 

@@ -89,6 +89,7 @@ public class AvoidAttackFilter extends ZuulFilter {
             ctx.set("isOK", false);//可以把一些值放到ctx中，便于后面的filter获取使用
             //返回内容给客户端
             result.put("message", "Wenn du lange in einen Abgrund blickst,blickt der Abgrund auch dich hinein.");
+            result.put("rescode",0);
             ctx.setResponseBody(result.toJSONString());// 返回错误内容
         }
         return null;
