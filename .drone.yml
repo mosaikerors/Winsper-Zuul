@@ -18,9 +18,9 @@ steps:
     image: appleboy/drone-scp
     settings:
       host: 202.120.40.8
-        username: root
-        key:
-          from_secret: private_key
+      username: root
+      key:
+        from_secret: private_key
       rm: true
       target: /Winsper/winsper-zuul
       source:
