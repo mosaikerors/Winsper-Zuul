@@ -10,7 +10,7 @@ import java.util.List;
 @Service
 public class MessageServiceImpl implements MessageService {
     @Autowired
-    MessageRepository messageRepository;
+    private MessageRepository messageRepository;
 
     @Override
     public List<Message> findMessagesByReceiverUId(Long uId) {
@@ -78,7 +78,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void addNewMessage(Message message) {
-        messageRepository.save(message);
+    public void addNewMessage(Message myMessage) {
+        messageRepository.save(myMessage);
     }
 }
