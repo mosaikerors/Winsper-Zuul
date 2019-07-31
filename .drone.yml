@@ -14,59 +14,65 @@ steps:
   - mvn package -Dmaven.test.skip=true
   - echo "test and package zuul completed 🙂🙂🙂"
 
-- name: upload
+- name: upload_master
   image: appleboy/drone-scp
   settings:
-    host: 47.103.0.246
+    host: 10.0.0.98
     username: root
-    password:
-      from_secret: yjy_password
     rm: true
     target: /Winsper/winsper-zuul
     source:
     - target/winsper-zuul-0.0.1-SNAPSHOT.jar
     - Dockerfile
 
-- name: deploy
+- name: make_image_and_copy_and_deploy_master
   image: appleboy/drone-ssh
   settings:
-    host: 47.103.0.246
+    host: 10.0.0.98
     username: root
-    password:
-      from_secret: yjy_password
     script:
     - cd /Winsper/winsper-zuul/target
     - cp ../Dockerfile .
     - docker build -t winsper-winsper-zuul .
+    - docker save winsper-winsper-zuul>winsper-winsper-zuul.tar
+    - scp winsper-winsper-zuul.tar root@10.0.0.106:/root/Winsper/zuul
+    - scp winsper-winsper-zuul.tar root@10.0.0.39:/root/Winsper/zuul
+    - scp winsper-winsper-zuul.tar root@10.0.0.99:/root/Winsper/zuul
     - docker rm -f winsper-winsper-zuul-c
-    - docker run -d --name winsper-winsper-zuul-c -p 7120:7120 winsper-winsper-zuul
+    - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
 
-- name: upload_czn
-  image: appleboy/drone-scp
-  settings:
-    host: 47.102.205.224
-    username: root
-    password:
-      from_secret: czn_password
-    rm: true
-    target: /Winsper/winsper-zuul
-    source:
-      - target/winsper-zuul-0.0.1-SNAPSHOT.jar
-      - Dockerfile
-
-- name: deploy_czn
+- name: deploy_slave1
   image: appleboy/drone-ssh
   settings:
-    host: 47.102.205.224
+    host: 10.0.0.106
     username: root
-    password:
-      from_secret: czn_password
     script:
-      - cd /Winsper/winsper-zuul/target
-      - cp ../Dockerfile .
-      - docker build -t winsper-winsper-zuul .
+      - cd /Winsper/zuul
+      - docker load -i winsper-winsper-zuul.tar
       - docker rm -f winsper-winsper-zuul-c
-      - docker run -d --name winsper-winsper-zuul-c --expose=7120 -p 7120:7120 -e "EUREKA_INSTANCE_IP-ADDRESS=47.102.205.224" -e "SERVER_PORT=7120" winsper-winsper-zuul
+      - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
+
+- name: deploy_slave2
+  image: appleboy/drone-ssh
+  settings:
+    host: 10.0.0.39
+    username: root
+    script:
+      - cd /Winsper/zuul
+      - docker load -i winsper-winsper-zuul.tar
+      - docker rm -f winsper-winsper-zuul-c
+      - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
+
+- name: deploy_slave3
+  image: appleboy/drone-ssh
+  settings:
+    host: 10.0.0.99
+    username: root
+    script:
+      - cd /Winsper/zuul
+      - docker load -i winsper-winsper-zuul.tar
+      - docker rm -f winsper-winsper-zuul-c
+      - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
 
 volumes:
 - name: dependency
