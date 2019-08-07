@@ -1,80 +1,43 @@
 kind: pipline
-name: Winsper-Consumer
+name: Winsper-Zuul
 
 steps:
-- name: test
-  image: maven
-  volumes:
-  - name: dependency
-    path: /root/.m2
-# - name: configuration
-#   path: /drone/src/back-end/src/main/resources/application.yml
-  commands:
-  - mvn clean
-  - mvn package -Dmaven.test.skip=true
-  - echo "test and package zuul completed 🙂🙂🙂"
+  - name: test
+    image: maven
+    volumes:
+      - name: dependency
+        path: /root/.m2
+    # - name: configuration
+    #   path: /drone/src/back-end/src/main/resources/application.yml
+    commands:
+      - mvn clean
+      - mvn package -Dmaven.test.skip=true
+      - echo "test and package zuul completed 🙂🙂🙂"
 
-- name: upload_master
-  image: appleboy/drone-scp
-  settings:
-    host: 10.0.0.98
-    username: root
-    rm: true
-    target: /Winsper/winsper-zuul
-    source:
-    - target/winsper-zuul-0.0.1-SNAPSHOT.jar
-    - Dockerfile
+  - name: upload_master
+    image: appleboy/drone-scp
+    settings:
+      host: 10.0.0.98
+      username: root
+      rm: true
+      target: /Winsper/winsper-zuul
+      source:
+        - target/winsper-zuul-0.0.1-SNAPSHOT.jar
+        - Dockerfile
 
-- name: make_image_and_copy_and_deploy_master
-  image: appleboy/drone-ssh
-  settings:
-    host: 10.0.0.98
-    username: root
-    script:
-    - cd /Winsper/winsper-zuul/target
-    - cp ../Dockerfile .
-    - docker build -t winsper-winsper-zuul .
-    - docker save winsper-winsper-zuul>winsper-winsper-zuul.tar
-    - scp winsper-winsper-zuul.tar root@10.0.0.106:/root/Winsper/zuul
-    - scp winsper-winsper-zuul.tar root@10.0.0.39:/root/Winsper/zuul
-    - scp winsper-winsper-zuul.tar root@10.0.0.99:/root/Winsper/zuul
-    - docker rm -f winsper-winsper-zuul-c
-    - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
-
-- name: deploy_slave1
-  image: appleboy/drone-ssh
-  settings:
-    host: 10.0.0.106
-    username: root
-    script:
-      - cd /Winsper/zuul
-      - docker load -i winsper-winsper-zuul.tar
-      - docker rm -f winsper-winsper-zuul-c
-      - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
-
-- name: deploy_slave2
-  image: appleboy/drone-ssh
-  settings:
-    host: 10.0.0.39
-    username: root
-    script:
-      - cd /Winsper/zuul
-      - docker load -i winsper-winsper-zuul.tar
-      - docker rm -f winsper-winsper-zuul-c
-      - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
-
-- name: deploy_slave3
-  image: appleboy/drone-ssh
-  settings:
-    host: 10.0.0.99
-    username: root
-    script:
-      - cd /Winsper/zuul
-      - docker load -i winsper-winsper-zuul.tar
-      - docker rm -f winsper-winsper-zuul-c
-      - docker run -d --name winsper-winsper-zuul-c -p 30523:7120 winsper-winsper-zuul
+  - name: make_image_and_deploy_master
+    image: appleboy/drone-ssh
+    settings:
+      host: 10.0.0.98
+      username: root
+      script:
+        - cd /Winsper/winsper-zuul/target
+        - cp ../Dockerfile .
+        - docker build -t winsper-zuul .
+        - docker rm -f winsper-zuul-c
+        - docker run -d --name winsper-zuul-c --expose=30527 -p 30527:30527 -e "EUREKA_INSTANCE_IP-ADDRESS=10.0.0.98" -e "SERVER_PORT=30527" winsper-zuul
 
 volumes:
-- name: dependency
-  host:
-    path: /root/.m2
+  - name: dependency
+    host:
+      path: /root/.m2
