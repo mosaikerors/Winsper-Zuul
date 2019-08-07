@@ -1,5 +1,5 @@
 kind: pipline
-name: Winsper-Consumer
+name: Winsper-Zuul
 
 steps:
   - name: test
@@ -17,12 +17,12 @@ steps:
   - name: upload
     image: appleboy/drone-scp
     settings:
-      host: 10.0.0.98
+      host: 10.0.0.41
       username: root
       key:
         from_secret: private_key
       rm: true
-      target: /Winsper/winsper-zuul
+      target: ~/tbc/drone/tmp
       source:
         - target/winsper-zuul-0.0.1-SNAPSHOT.jar
         - Dockerfile
@@ -30,20 +30,19 @@ steps:
   - name: deploy
     image: appleboy/drone-ssh
     settings:
-      host: 10.0.0.98
+      host: 10.0.0.41
       username: root
       key:
         from_secret: private_key
       script:
-        - cd /root/Winsper/drone-tmp/target
+        - cd ~/tbc/drone/tmp/target
         - cp ../Dockerfile .
-        - docker build -t gusabary/winsper-zuul
+        - docker build -t gusabary/winsper-zuul .
         - docker login
         - docker push gusabary/winsper-zuul
-        - cd /root/Winsper/Winsper
+        - cd ~/tbc/Winsper
         - kubectl delete deploy/winsper-zuul
         - kubectl apply -f zuul-deployment.yml
-
 
 volumes:
   - name: dependency
