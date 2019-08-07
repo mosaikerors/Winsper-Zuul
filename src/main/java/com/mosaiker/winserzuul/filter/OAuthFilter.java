@@ -51,6 +51,7 @@ public class OAuthFilter extends ZuulFilter {
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
         String requestUrl = request.getRequestURL().toString();
+<<<<<<< HEAD
         String pathUrl = requestUrl.substring(requestUrl.indexOf(port) + port.length());
         System.out.println("requestUrl: " + requestUrl);
         System.out.println("pathUrl: " + pathUrl);
@@ -65,6 +66,21 @@ public class OAuthFilter extends ZuulFilter {
             }
         }
         return true;
+=======
+        System.out.println(requestUrl);
+        String pathUrl = requestUrl.substring(requestUrl.indexOf(port)+port.length());
+        System.out.println(pathUrl);
+        ctx.set("pathUrl", pathUrl);
+        ctx.set("isOK", true);
+        return false;
+//        List<String> noAuthPaths = Arrays.asList(noAuth.split(","));
+//        for (String noAuthPath : noAuthPaths) {
+//            if (pathUrl.startsWith(noAuthPath)) {
+//                return false;
+//            }
+//        }
+//        return true;
+>>>>>>> newlogin
     }
 
     /*

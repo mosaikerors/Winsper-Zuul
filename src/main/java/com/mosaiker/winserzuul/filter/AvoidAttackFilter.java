@@ -1,6 +1,7 @@
 package com.mosaiker.winserzuul.filter;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mosaiker.winserzuul.utils.Utils;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import io.micrometer.core.instrument.util.StringUtils;
@@ -34,8 +35,8 @@ public class AvoidAttackFilter extends ZuulFilter {
     String avoidAttack;
 
     /*
-     * 判断是否需要认证
-     * 默认需要认证，把不需要认证的特殊情况写出来
+     * 判断是否需要防攻击
+     * 把需要的都列出来
      * */
     @Override
     public boolean shouldFilter() {
@@ -61,27 +62,7 @@ public class AvoidAttackFilter extends ZuulFilter {
         //  验证参数中的uId和header中的uId一致（如果有的话），防止狡猾的用户用自己的token改别人的信息
         RequestContext ctx = RequestContext.getCurrentContext();
         HttpServletRequest request = ctx.getRequest();
-        String requestUId = "";
-        String method = request.getMethod();
-        if ("GET".equals(method) || "DELETE".equals(method)) {
-            requestUId = request.getParameter("uId");
-
-        } else if ("POST".equals(method) || "PUT".equals(method)) {
-            try {
-                //  获取请求的输入流
-                InputStream in = request.getInputStream();
-                String body = StreamUtils.copyToString(in, Charset.forName("UTF-8"));
-                // 如果body为空初始化为空json
-                if (StringUtils.isBlank(body)) {
-                    body = "{}";
-                }
-                //  转化成json
-                JSONObject json = JSONObject.parseObject(body);
-                requestUId = json.getString("uId");
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+        String requestUId = Utils.getUId(request);
         JSONObject result = new JSONObject();
         if (!requestUId.equals(ctx.get("uId").toString())) {
             ctx.setSendZuulResponse(false);//不需要进行路由，也就是不会调用api服务提供者
