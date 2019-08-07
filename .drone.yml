@@ -34,6 +34,7 @@ steps:
       username: root
       key:
         from_secret: private_key
+      command_timeout: 5m
       script:
         - cd ~/tbc/drone/tmp/target
         - cp ../Dockerfile .
