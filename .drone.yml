@@ -1,5 +1,5 @@
 kind: pipline
-name: Winsper-Zuul
+name: winsper-zuul
 
 steps:
   - name: test
