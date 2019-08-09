@@ -73,7 +73,8 @@ public class OAuthFilter extends ZuulFilter {
     @Value("${pathRole}")
     String pathRoleString;
 
-    String port="30525";
+    @Value("${server.port}")
+    String port;
 
     @Override
     public Object run() {
