@@ -10,6 +10,8 @@ import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,6 +34,7 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
      */
     private static Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
     private static Map<String, String> userMap = new ConcurrentHashMap<>();
+    private static Map<String, List<String>> messageBox = new ConcurrentHashMap<>();
 
     /**
      * webSocket连接创建后调用
@@ -42,8 +45,20 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
         String uId = String.valueOf(session.getAttributes().get("senderUId"));
         userMap.put(uId, session.getId());
         sessionMap.put(session.getId(), session);
-        System.out.println("userMap:" + userMap);
-        System.out.println("sessionMap:" + sessionMap);
+        // 看看messageBox有没有自己的消息，如果有，就发给自己
+        List<String> messages = messageBox.get(uId);
+        if (messages != null && messages.size() > 0) {
+            for (String message : messages) {
+                try {
+                    session.sendMessage(new TextMessage(message));
+                } catch (IOException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+            // 清空信箱
+            messages.clear();
+            messageBox.put(uId, messages);
+        }
     }
 
     /**
@@ -96,11 +111,8 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
                 default:
                     break;
             }
-            result.put("hasRead", false);
             sendMessage(receiverUId.toString(), result.toJSONString());
             // 存到数据库持久化
-            System.out.println(myMessage.toString());
-            System.out.println(result.toJSONString());
             webSocketHandler.messageService.addNewMessage(myMessage);
 //        } else if (message instanceof BinaryMessage) {
 //            System.out.println("binary");
@@ -124,6 +136,8 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
      */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        String uId = String.valueOf(session.getAttributes().get("senderUId"));
+        userMap.remove(uId);
         sessionMap.remove(session.getId());
     }
 
@@ -137,15 +151,20 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
      */
     public void sendMessage(String uId, String message) {
         try {
-//            System.out.println("sendMessage Invoked");
             String sessionId = userMap.get(uId);
             WebSocketSession session = sessionMap.get(sessionId);
-//            System.out.println(uId);
-//            System.out.println(sessionId);
-//            System.out.println(message);
             session.sendMessage(new TextMessage(message));
         } catch (IOException e) {
             System.out.println(e.getMessage());
+        } catch (NullPointerException e) {
+            //如果这个用户不在线，就帮他把消息放到消息盒子，等他登陆了再发给他
+            List<String> messages = messageBox.get(uId);
+            if (messages == null) {
+                messages = new ArrayList<>();
+            }
+            messages.add(message);
+            messageBox.put(uId, messages);
+            return;
         }
     }
 }
