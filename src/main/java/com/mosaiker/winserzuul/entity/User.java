@@ -1,5 +1,7 @@
 package com.mosaiker.winserzuul.entity;
 
+import org.hibernate.annotations.ColumnTransformer;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,6 +11,10 @@ import javax.persistence.Id;
 public class User {
     private long uId;
     private String username;
+    @ColumnTransformer(
+            read = "decrypt(PASSWORD)",
+            write = "encrypt(nvl(?, 'null'))"
+    )
     private String password;
     private String phone;
     private int status;  //status: 0 - 被禁用， 1 - 普通用户， 2 - 会员
