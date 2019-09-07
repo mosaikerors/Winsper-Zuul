@@ -108,6 +108,10 @@ public class WebSocketHandler extends AbstractWebSocketHandler {
                     result.put("hId", hId);
                     myMessage.sethId(hId);
                     break;
+                case 6:
+                    result.put("text", "尊敬的用户您好，您于"+requestBody.getString("time")
+                            +"发布的函有违规内容，请尽快修改，以免造成不必要的困扰。Sa wa di ka~~");
+                    break;
                 default:
                     break;
             }
